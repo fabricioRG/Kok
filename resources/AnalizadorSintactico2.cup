@@ -1,0 +1,62 @@
+ package parrot.backend.analizadores;
+
+import java_cup.runtime.*;
+import parrot.backend.analizadores.sym2;
+import parrot.backend.usuario.ManejadorUsuario;
+
+
+parser code {:
+
+	private ManejadorUsuario mu = null;
+	private int internalOption = 0;
+
+	// Connect this parser to a scanner!
+	public parser2(Lexer2 lex, ManejadorUsuario mu) {
+		super(lex);
+		this.mu = mu;
+	}
+
+        public void syntax_error(Symbol s) {
+            System.out.println("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
+        }
+
+:}
+
+/* Terminals (tokens returned by the scanner). */
+terminal String         	USUARIOS_ABIERTO, USUARIOS_CERRADO, USUARIO_ABIERTO;
+terminal String 			USUARIO_CERRADO, NOMBRE_ABIERTO, NOMBRE_CERRADO;
+terminal String 			ID_ABIERTO, ID_CERRADO, PASS_ABIERTO, PASS_CERRADO;
+terminal String 			IDENTIFICADOR, TEXTO_PARAMETRO;
+
+non terminal String 		main, usuarios, usuario, parametros, nombre, id, pass, param;
+
+start with main;
+
+/* INICIO GRAMATICA DE -----MAIN----- */
+
+main ::= 			usuarios
+					;
+
+usuarios ::= 		USUARIOS_ABIERTO usuario USUARIOS_CERRADO
+					| USUARIOS_ABIERTO USUARIOS_CERRADO
+					;
+
+usuario ::= 		usuario parametros
+					| parametros
+					;
+
+parametros ::= 		USUARIO_ABIERTO nombre id pass USUARIO_CERRADO {:mu.setUsuario(null, 4);:}
+					;
+
+nombre ::= 			NOMBRE_ABIERTO param:e1 NOMBRE_CERRADO {:RESULT = e1; mu.setUsuario(RESULT, 1);:}
+					;
+
+id ::= 				ID_ABIERTO IDENTIFICADOR:e2 ID_CERRADO {:RESULT = e2; mu.setUsuario(RESULT, 2);:}
+					;
+
+pass ::= 			PASS_ABIERTO param:e3 PASS_CERRADO {:RESULT = e3; mu.setUsuario(RESULT, 3);:}
+					;
+
+param ::= 			IDENTIFICADOR:e1 {:RESULT = e1;:}
+					| TEXTO_PARAMETRO:e2 {:RESULT = e2;:}
+					;
