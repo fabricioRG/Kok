@@ -33,13 +33,14 @@ import static analizadores.sym.*;
 
 LineTerminator = \r|\n|\r\n
 WhiteSpace = [ \t\f]
+TextoParametro = "[" [^*] ~"]" | "[" "]"
 Letra = [a-zA-Z]
 Entero = [0-9]
 Digito = [1-9][0-9]*
 Space = ({WhiteSpace})*
 LetraNumero = ({Letra}|{Entero})
 NumeroHexadecimal = "#" {LetraNumero}{LetraNumero}{LetraNumero}{LetraNumero}{LetraNumero}{LetraNumero}
-Comentario = "#" [^*] ~"\n" | "#" "\n"
+Comentario = "##" [^*] ~{LineTerminator} | "##" {LineTerminator}
 Variable = ({Letra}|{Digito}|"-"|"_"|"$")+
 
 
@@ -80,8 +81,6 @@ Variable = ({Letra}|{Digito}|"-"|"_"|"$")+
 	"todraw" {return symbol(TODRAW, yytext());}
 	"td" {return symbol(TODRAW, yytext());}
 	"repeat" {return symbol(REPEAT, yytext());}
-	"[" {return symbol(COR_ABI, yytext());}
-	"]" {return symbol(COR_CER, yytext());}
 	"(" {return symbol(PAR_ABI, yytext());}
 	")" {return symbol(PAR_CER, yytext());}
 	":" {return symbol(DOS_PUNTOS, yytext());}
@@ -91,6 +90,7 @@ Variable = ({Letra}|{Digito}|"-"|"_"|"$")+
 	"*" {return symbol(MULTIPLICACION, yytext());}
 	"/" {return symbol(DIVISION, yytext());}
 	"," {return symbol(COMA, yytext());}
+	{TextoParametro} {return symbol(TEXTO_PARAM, yytext());}
 	{Entero} {return symbol(ENTERO, yytext());}
 	{Digito} {return symbol(DIGITO, yytext());}
 	{Variable} {return symbol(IDENTIFICADOR, yytext());}

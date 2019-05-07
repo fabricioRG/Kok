@@ -10,6 +10,8 @@ parser code {:
 	private int agregar = 1;
 	private int clase = 0;
 	private int internalOption = 0;
+	private int errorState = 0;
+	public static int INTEGER_DEFAULT = 404;
 
 	// Connect this parser to a scanner!
 	public parser(Lexer1 lex, ManejadorParser mp) {
@@ -18,8 +20,8 @@ parser code {:
 	}
 
         public void syntax_error(Symbol s) {
-        	//this.mp.showErrorMessege("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
-            System.out.println("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1) );
+            System.out.println("Error R de sintaxis: "+ s.value +" Linea "+(s.left+1)+" columna "+(s.right+1));
+            mp.errorState((String) s.value, s.left, s.right, s.sym);
         }
 
 :}
@@ -27,13 +29,19 @@ parser code {:
 /* Terminals (tokens returned by the scanner). */
 terminal String         FORWARD, BACKWARD, RIGHT, LEFT, CLEARS, PENUP, PENDOWN, TOCENTER;
 terminal String 		COLOR, POSITIONXY, POSITIONX, POSITIONY, HIDETURTLE, SHOWTURTLE;
-terminal String 		TOERASE, TODRAW, REPEAT, COR_ABI, COR_CER, PAR_ABI, PAR_CER;
+terminal String 		TOERASE, TODRAW, REPEAT, TEXTO_PARAM, PAR_ABI, PAR_CER;
 terminal String 		DOS_PUNTOS, IGUAL, SUMA, RESTA, MULTIPLICACION, DIVISION, COMA;
 terminal String 		DIGITO, IDENTIFICADOR, HEXADECIMAL, COMENTARIO, ENTERO;
 
-non terminal String 	main, main2, enteroDig;
-non terminal String 	fd, bk, rt, lt, cs, pu, pd, cr, color, posxy;
-non terminal String 	posx, posy, ht, st, te, td;	
+non terminal String 	main, main2, main3, comentario;
+non terminal String 	cs, pu, pd, cr, color;
+non terminal String 	ht, st, te, td, idVar, palabraRes, repeat;
+non terminal Integer 	varDcl, singleDcl, singleValue, varValue;
+non terminal Integer 	fd, bk, rt, lt, posx, posy, posxy;
+non terminal Integer 	operacion, operacion2, operacion3, enteroDig, assignment;
+
+precedence left 		RESTA, SUMA;
+precedence left 		MULTIPLICACION, DIVISION;
 
 start with main;
 
@@ -43,7 +51,11 @@ main ::= 		main main2
 				| main2
 				;
 
-main2 ::= 		fd
+main2 ::= 		main3 comentario
+				| main3
+				;
+
+main3 ::= 		fd
 				| bk
 				| rt
 				| lt
@@ -59,18 +71,21 @@ main2 ::= 		fd
 				| st
 				| te
 				| td
+				| varDcl
+				| repeat
 				;
 
-fd ::= 			FORWARD enteroDig:e1 {:RESULT = e1; mp.forward(RESULT);:}
+fd ::= 			FORWARD varDcl:e1 {:RESULT = e1; mp.forward(RESULT);:}
+				| error:e palabraRes
 				;
 
-bk ::= 			BACKWARD enteroDig:e1 {:RESULT = e1; mp.backward(RESULT);:}
+bk ::= 			BACKWARD varDcl:e1 {:RESULT = e1; mp.backward(RESULT);:}
 				;
 
-rt ::= 			RIGHT enteroDig:e1 {:RESULT = e1; mp.right(RESULT);:}
+rt ::= 			RIGHT varDcl:e1 {:RESULT = e1; mp.right(RESULT);:}
 				;
 
-lt ::= 			LEFT enteroDig:e1 {:RESULT = e1; mp.left(RESULT);:}
+lt ::= 			LEFT varDcl:e1 {:RESULT = e1; mp.left(RESULT);:}
 				;
 
 cs ::= 			CLEARS {:mp.clears();:}
@@ -85,11 +100,12 @@ pd ::= 			PENDOWN {:mp.pendown();:}
 cr ::= 			TOCENTER {:mp.tocenter();:}
 				;
 
-color ::= 		COLOR ENTERO:e1 {:RESULT = e1; mp.color(RESULT, null);:}
-				| COLOR HEXADECIMAL:e2 {:RESULT = e2; mp.color(null, RESULT);:}
+color ::= 		COLOR varDcl:e1 {:mp.color(e1, null);:}
+				| COLOR HEXADECIMAL:e2 {:RESULT = e2; mp.color(0, RESULT);:}
 				;
 
 posxy ::= 		POSITIONXY enteroDig:e1 COMA enteroDig:e2 {:mp.positionxy(e1, e2);:}
+				| error:e enteroDig
 				;
 
 posx ::= 		POSITIONX enteroDig:e1 {:RESULT = e1; mp.positionx(RESULT);:}
@@ -110,8 +126,69 @@ te ::= 			TOERASE {:mp.toerase();:}
 td ::= 			TODRAW {:mp.todraw();:}
 				;
 
-enteroDig ::= 	ENTERO:e1 {:RESULT = e1;:}
-				| DIGITO:e2 {:RESULT = e2;:}
+repeat ::= 		REPEAT varDcl:e1 TEXTO_PARAM:e2 {:mp.repeat(e1, e2);:}
+				;
+
+enteroDig ::= 	ENTERO:e1 {:RESULT = Integer.parseInt(e1);:}
+				| DIGITO:e2 {:RESULT = Integer.parseInt(e2);:}
+				;
+
+comentario ::= 	COMENTARIO:e1 {:RESULT = e1;:}
+				;
+
+palabraRes ::= 	FORWARD:e {:RESULT = e;:}
+				| BACKWARD:e {:RESULT = e;:}
+				| RIGHT:e {:RESULT = e;:}
+				| LEFT:e {:RESULT = e;:}
+				| CLEARS:e {:RESULT = e;:}
+				| PENUP:e {:RESULT = e;:}
+				| PENDOWN:e {:RESULT = e;:}
+				| TOCENTER:e {:RESULT = e;:}
+				| POSITIONXY:e {:RESULT = e;:}
+				| POSITIONX:e {:RESULT = e;:}
+				| POSITIONY:e {:RESULT = e;:}
+				| HIDETURTLE:e {:RESULT = e;:}
+				| SHOWTURTLE:e {:RESULT = e;:}
+				| TOERASE:e {:RESULT = e;:}
+				| TODRAW:e {:RESULT = e;:}
+				| REPEAT:e {:RESULT = e;:}
+				;
+
+varDcl ::= 		idVar:e1 IGUAL operacion:e2 {:RESULT = mp.getResultFromAssignment(e1, e2);:}
+				| operacion:e1 {:RESULT = e1;:}
+				;
+
+singleDcl ::= 	idVar:e {:mp.singleAssignment(e);:}
+				;
+
+operacion ::= 	operacion:e1 SUMA operacion2:e2 {:RESULT = mp.getResultOperation(e1, e2, 1);:}
+				| operacion:e1 RESTA operacion2:e2 {:RESULT = mp.getResultOperation(e1, e2, 2);:}
+				| operacion2:e {:RESULT = e;:}
+				;
+
+operacion2 ::=	operacion2:e1 MULTIPLICACION operacion3:e2 {:RESULT = mp.getResultOperation(e1, e2, 3);:}
+				| operacion2:e1 DIVISION operacion3:e2 {:RESULT = mp.getResultOperation(e1, e2, 4);:}
+				| operacion3:e {:RESULT = e;:}
+				;
+
+operacion3 ::= 	PAR_ABI operacion:e PAR_CER {:RESULT = e;:}
+				| RESTA enteroDig:e {:RESULT = mp.getNegativeNumber(e);:}
+				| enteroDig:e {:RESULT = e;:}
+				| idVar:e {:RESULT = mp.getValueFromTable(e);:}
+				;
+
+/*operacion ::=	operacion:e1 SUMA operacion:e2 {:RESULT = mp.getResultOperation(e1, e2, 1);:}
+				| operacion:e1 RESTA operacion:e2 {:RESULT = mp.getResultOperation(e1, e2, 2);:}
+				| operacion:e1 MULTIPLICACION operacion:e2 {:RESULT = mp.getResultOperation(e1, e2, 3);:}
+				| operacion:e1 DIVISION operacion:e2 {:RESULT = mp.getResultOperation(e1, e2, 4);:}
+				| PAR_ABI operacion:e PAR_CER {:RESULT = e;:}
+				| RESTA enteroDig:e {:RESULT = mp.getNegativeNumber(e);:}
+				| enteroDig:e {:RESULT = e;:}
+				| idVar:e {:RESULT = mp.getValueFromTable(e);:}
+				;*/
+
+idVar ::= 		DOS_PUNTOS IDENTIFICADOR:e {:RESULT = e;:}
+				| DOS_PUNTOS palabraRes:e {:RESULT = e;:}
 				;
 
 /* -----GRAMATICA CREAR SITIO WEB------ */

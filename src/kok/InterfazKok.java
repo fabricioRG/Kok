@@ -17,9 +17,12 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.util.LinkedList;
 import java.util.List;
+import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import manejadores.ManejadorGraphics;
 import manejadores.ManejadorInterfaz;
 
 /**
@@ -54,6 +57,7 @@ public class InterfazKok extends javax.swing.JFrame {
     Vector v2 = new Vector(310, 150);
     List<Line2D> lines = null;
     List<AffineTransform> affines = null;
+    List<Color> colores = null;
 
     public class Dibujo2D extends JPanel {
 
@@ -68,8 +72,6 @@ public class InterfazKok extends javax.swing.JFrame {
 
             Graphics2D g2 = (Graphics2D) g;
 
-            System.out.printf("X0: %f, Y0: %f\n", v1.getX(), v1.getY());
-            System.out.printf("X1: %f, Y1: %f\n", v2.getX(), v2.getY());
             if (clears) {
 
                 if (showTurtle) {
@@ -78,34 +80,19 @@ public class InterfazKok extends javax.swing.JFrame {
                     g2.finalize();
                 }
 
-                posx.setText(v1.getX() + "");
-                posy.setText(v1.getY() + "");
-                posAngulo.setText(anguloAnterior + "");
-
             } else {
 
-                if (edition) {
-                    Line2D line = new Line2D.Double(v1.getX(), v1.getY(), v2.getX(), v2.getY());
-                    lines.add(line);
-                    AffineTransform at = AffineTransform.getRotateInstance(Math.toRadians(anguloAnterior + COMPLEMENTO), line.getX1(), line.getY1());
-                    affines.add(at);
-                }
-
                 for (int i = 0; i < lines.size(); i++) {
+                    g2.setColor(colores.get(i));
                     g2.draw(affines.get(i).createTransformedShape(lines.get(i)));
                 }
-                
+
                 Vector v = ManejadorInterfaz.getInstance().getVector(Math.abs(v1.getY() - v2.getY()), anguloAnterior);
                 if (showTurtle) {
                     Image im1 = Toolkit.getDefaultToolkit().getImage(IMAGE_RELATIVE_PATH);
                     g2.drawImage(im1, (int) (v1.getX() + v.getX() - AJUSTE), (int) (v1.getY() - v.getY() - AJUSTE), this);
                     g2.finalize();
                 }
-                
-                posx.setText((double) (v1.getX() + v.getX()) + "");
-                posy.setText((double) (v1.getY() - v.getY()) + "");
-                posAngulo.setText(anguloActual + "");
-                
             }
         }
     }
@@ -120,6 +107,7 @@ public class InterfazKok extends javax.swing.JFrame {
         ManejadorInterfaz.getInstance().setInterfazKok(this);
         this.lines = new LinkedList<>();
         this.affines = new LinkedList<>();
+        this.colores = new LinkedList<>();
         ManejadorInterfaz.getInstance().clears();
     }
 
@@ -149,6 +137,8 @@ public class InterfazKok extends javax.swing.JFrame {
         posy = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         posAngulo = new javax.swing.JLabel();
+        runButton = new javax.swing.JButton();
+        clearButton = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         abrirMenu = new javax.swing.JMenuItem();
@@ -174,7 +164,8 @@ public class InterfazKok extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(comandosArea);
 
-        edicionArea.setEditable(false);
+        edicionArea.setEditable(true);
+        edicionArea.setEnabled(false);
         edicionArea.setMargin(new java.awt.Insets(5, 5, 5, 5));
         jScrollPane3.setViewportView(edicionArea);
 
@@ -211,6 +202,26 @@ public class InterfazKok extends javax.swing.JFrame {
 
         posAngulo.setText(" ");
 
+        runButton.setBackground(new java.awt.Color(0, 185, 3));
+        runButton.setForeground(new java.awt.Color(254, 254, 254));
+        runButton.setText("Run");
+        runButton.setEnabled(false);
+        runButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                runButtonActionPerformed(evt);
+            }
+        });
+
+        clearButton.setBackground(new java.awt.Color(1, 104, 180));
+        clearButton.setForeground(new java.awt.Color(254, 254, 254));
+        clearButton.setText("Clear");
+        clearButton.setEnabled(false);
+        clearButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clearButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -221,8 +232,16 @@ public class InterfazKok extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(jPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 620, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPane3)
-                        .addGap(6, 6, 6))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(jScrollPane3)
+                                .addGap(6, 6, 6))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
+                                .addComponent(runButton, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(clearButton, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
@@ -234,15 +253,15 @@ public class InterfazKok extends javax.swing.JFrame {
                                 .addGap(43, 43, 43)
                                 .addComponent(jLabel4)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(posx, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(12, 12, 12)
+                                .addComponent(posx, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel5)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(posy, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(posy, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel6)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(posAngulo, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(posAngulo, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(0, 0, Short.MAX_VALUE)))
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
@@ -263,20 +282,27 @@ public class InterfazKok extends javax.swing.JFrame {
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
-                    .addComponent(jPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(9, 9, 9)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel5)
-                    .addComponent(jLabel6)
-                    .addComponent(posAngulo)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel2)
-                        .addComponent(jLabel1)
-                        .addComponent(posx)
-                        .addComponent(posy)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 24, Short.MAX_VALUE)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel6)
+                                .addComponent(posAngulo)
+                                .addComponent(posy)
+                                .addComponent(jLabel5))
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(jLabel2)
+                                .addComponent(jLabel1)
+                                .addComponent(posx))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 315, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(runButton)
+                            .addComponent(clearButton))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
                     .addComponent(jScrollPane1))
@@ -286,9 +312,19 @@ public class InterfazKok extends javax.swing.JFrame {
         jMenu1.setText("Archivo");
 
         abrirMenu.setText("Abrir");
+        abrirMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                abrirMenuActionPerformed(evt);
+            }
+        });
         jMenu1.add(abrirMenu);
 
         guardarMenu.setText("Guardar");
+        guardarMenu.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                guardarMenuActionPerformed(evt);
+            }
+        });
         jMenu1.add(guardarMenu);
 
         cerrarMenu.setText("Cerrar");
@@ -314,9 +350,31 @@ public class InterfazKok extends javax.swing.JFrame {
 
     private void comandosAreaKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_comandosAreaKeyReleased
         if ((int) evt.getKeyChar() == (int) '\n') {
-            ManejadorInterfaz.getInstance().setInstructionByComandos(comandosArea.getText().trim());
+            try {
+                ManejadorInterfaz.getInstance().setInstructionByComandos(comandosArea.getText().trim(), 1);
+            } catch (Exception e) {
+            }
         }
     }//GEN-LAST:event_comandosAreaKeyReleased
+
+    private void abrirMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_abrirMenuActionPerformed
+        ManejadorInterfaz.getInstance().openFile();
+    }//GEN-LAST:event_abrirMenuActionPerformed
+
+    private void guardarMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_guardarMenuActionPerformed
+        ManejadorInterfaz.getInstance().saveFile(comandosArea.getText());
+    }//GEN-LAST:event_guardarMenuActionPerformed
+
+    private void runButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_runButtonActionPerformed
+        try {
+            ManejadorInterfaz.getInstance().setInstructionByComandos(edicionArea.getText(), 0);
+        } catch (Exception e) {
+        }
+    }//GEN-LAST:event_runButtonActionPerformed
+
+    private void clearButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clearButtonActionPerformed
+        edicionArea.setText("");
+    }//GEN-LAST:event_clearButtonActionPerformed
 
     public JTextArea getComandosArea() {
         return comandosArea;
@@ -339,6 +397,14 @@ public class InterfazKok extends javax.swing.JFrame {
         return edition;
     }
 
+    public JButton getClearButton() {
+        return clearButton;
+    }
+
+    public JButton getRunButton() {
+        return runButton;
+    }
+
     public void setEdition(boolean edition) {
         this.edition = edition;
     }
@@ -356,10 +422,10 @@ public class InterfazKok extends javax.swing.JFrame {
         return anguloActual;
     }
 
-    public void setAnguloActual(double anguloActual) {
-        if (clears) {
+    public void setAnguloActual(double anguloActual, int option) { // 0 = sumar, 1 = remplazar valor
+        if (option == 1) {
             this.anguloActual = anguloActual;
-        } else {
+        } else if (option == 0) {
             this.anguloActual += anguloActual;
         }
         posAngulo.setText(this.anguloActual + "");
@@ -410,6 +476,14 @@ public class InterfazKok extends javax.swing.JFrame {
         return lines;
     }
 
+    public List<Color> getColores() {
+        return colores;
+    }
+
+    public void setColores(List<Color> colores) {
+        this.colores = colores;
+    }
+
     public void clearLines() {
         this.lines.clear();
     }
@@ -430,6 +504,10 @@ public class InterfazKok extends javax.swing.JFrame {
         this.affines = affines;
     }
 
+    public void clearColors() {
+        this.colores.clear();
+    }
+
     public boolean isClears() {
         return clears;
     }
@@ -446,9 +524,22 @@ public class InterfazKok extends javax.swing.JFrame {
         this.color = color;
     }
 
+    public JLabel getPosAngulo() {
+        return posAngulo;
+    }
+
+    public JLabel getPosx() {
+        return posx;
+    }
+
+    public JLabel getPosy() {
+        return posy;
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem abrirMenu;
     private javax.swing.JMenuItem cerrarMenu;
+    private javax.swing.JButton clearButton;
     private javax.swing.JTextArea comandosArea;
     private javax.swing.JTextPane edicionArea;
     private javax.swing.JMenuItem guardarMenu;
@@ -469,6 +560,7 @@ public class InterfazKok extends javax.swing.JFrame {
     private javax.swing.JLabel posAngulo;
     private javax.swing.JLabel posx;
     private javax.swing.JLabel posy;
+    private javax.swing.JButton runButton;
     // End of variables declaration//GEN-END:variables
 
     public void dibujar() {
@@ -477,7 +569,12 @@ public class InterfazKok extends javax.swing.JFrame {
             dibuj.setBounds(new Rectangle(PREFERED_WIDTH, PREFERED_HEIGHT));
             dibuj.setOpaque(false);
             started = true;
+            if (color == null) {
+                this.color = Color.BLACK;
+            }
         }
+        ManejadorGraphics mg = new ManejadorGraphics(this);
+        mg.addGraphic();
         jPanel.add(dibuj);
         jPanel.repaint();
     }
